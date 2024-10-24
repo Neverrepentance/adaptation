@@ -1,0 +1,5 @@
+[ks10-localsource]
+name = Kylin Linux Advanced Server 10
+baseurl=file:///home/imgages/iso
+gpgcheck = 0
+enabled = 1
