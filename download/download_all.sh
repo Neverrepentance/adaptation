@@ -6,50 +6,20 @@ rm -f *.core
 rm -f core.*
 
 
-yum -y install tar
-OS=$(rpm -qa|grep ^tar-[0-9]|awk -F '.' '{print $(NF-1)}')
-if [ -z "$OS" ]; then
-  OS=$(rpm -qa|head -n 1|awk -F '.' '{print $(NF-1)}')
-fi
+OS=$1
+cache_path="$2"
 ARCH=$(arch)
 
-if [[ "$OS" == "el7" ]]; then
-  ### 修改yum配置，安装时缓存包
-  sed -i '/keepcache=/d' /etc/yum.conf
-  echo "keepcache=1" >> /etc/yum.conf
-  cache_path=/var/cache/yum
-elif [[ "$OS" == "ky10" ]] || [[ "$OS" == "oe2203sp1" ]] || [[ "$OS" == "el8" ]]; then
-  sed -i '/keepcache=/d' /etc/dnf/dnf.conf
-  echo "keepcache=1" >> /etc/dnf/dnf.conf
-  sed -i '/cachedir=/d' /etc/dnf/dnf.conf
-  echo "cachedir=/var/cache/dnf/rpm" >> /etc/dnf/dnf.conf
-  sed -i '/sslverify=/d' /etc/dnf/dnf.conf
-  echo "sslverify=false" >> /etc/dnf/dnf.conf
-  cache_path=/var/cache/dnf
-  sed -i 's/gpgcheck = 1/gpgcheck = 0/g'  /etc/yum.repos.d/kylin_${ARCH}.repo
-  sed -i 's/gpgcheck = 1/gpgcheck = 0/g'  /etc/yum.repos.d/openEuler.repo
+base_dir="/home/images"
 
-  if [[ "$OS" == "ky10" ]]; then
-    spv=$(cat /etc/.productinfo |grep -Eo "SP[0-9]")
-    OS=$(echo ${OS}${spv}|awk '{print tolower($0)}')
-  fi
-fi 
-
-
-echo "$OS, $ARCH"
-
-yum clean all
-yum makecache
-
-yum -y install tar
-yum -y install findutils
+echo "OS:$OS, arch: $ARCH, cache path:${cache_path}"
 
 function clear_cache(){
-  if [ -d ${1}/${OS}/${ARCH} ]; then
-     rm -rf ${1}/${OS}/${ARCH}
+  if [ -d ${base_dir}/${1}/${OS}/${ARCH} ]; then
+     rm -rf ${base_dir}/${1}/${OS}/${ARCH}
   fi 
   
-  mkdir -p ${1}/${OS}/${ARCH}/pkg
+  mkdir -p ${base_dir}/${1}/${OS}/${ARCH}/pkg
   find $cache_path -name "*.rpm" -exec rm -f {} \;
 }
 
@@ -57,210 +27,227 @@ function clear_cache(){
 function download_rpm(){
   yum -y install ${2}
 
-  find $cache_path -name "*.rpm" -exec mv {} ${1}/${OS}/${ARCH}/pkg \;
+  find $cache_path -name "*.rpm" -exec mv {} ${base_dir}/${1}/${OS}/${ARCH}/pkg \;
 }
 
 function tar_rpm(){
-  if [ ! -d ${1}/${OS}/${ARCH} ]; then
+  if [ ! -d ${base_dir}/${1}/${OS}/${ARCH} ]; then
     return
   fi
-
-  tar czf ${1}.${OS}.${ARCH}.tar.gz ${1}/${OS}/${ARCH}/pkg/*
+  pushd ${base_dir}
+    if [ -f ${1}.${OS}.${ARCH}.tar.gz ]; then
+      rm -f ${1}.${OS}.${ARCH}.tar.gz
+    fi
+    tar czf ${1}.${OS}.${ARCH}.tar.gz ${1}/${OS}/${ARCH}/pkg/*
+  popd
 }
 
-find $cache_path -name "*.rpm" -exec rm -f {} \;
-
+## 下载网络相关组件
 function s_net(){
-clear_cache net
-download_rpm net net-tools
-download_rpm net tcpdump
-download_rpm net vconfig
-download_rpm net libnet
-tar_rpm net
+  # 网络配置 ifconfig命令
+  download_rpm common net-tools
+  # 抓包调试
+  download_rpm common tcpdump
+  # 创建虚拟接口，配置vlan
+  download_rpm common vconfig
+  # tcpkill旁路阻断需要
+  download_rpm common libnet
 }
 
+
+## JDK ，Java程序如管理端、Zookeeper需要
 function s_jdk(){
-clear_cache jdk
-download_rpm jdk java-1.8.0-openjdk
-tar_rpm jdk jdk
+  download_rpm common java-1.8.0-openjdk
 }
 
+## 中文字体
 function s_xfont(){
-clear_cache xfont
-if [[ "$ARCH" == "x86_64" ]] && [[ "${OS}" == "el8" ]]; then
-      cp ./xfont/${OS}/${ARCH}_local/* ./xfont/${OS}/${ARCH}/pkg/
-      yum -y localinstall ./xfont/${OS}/${ARCH}/pkg/libXfont*.rpm
-      yum -y localinstall ./xfont/${OS}/${ARCH}/pkg/xorg*.rpm
-      download_rpm xfont libXfont
-else
-  download_rpm xfont libXfont
-  download_rpm xfont libXfont2
-  download_rpm xfont xorg-x11-fonts
-fi
-tar_rpm xfont
+  if [[ "$ARCH" == "x86_64" ]] && [[ "${OS}" == "el8" ]]; then
+        cp ${base_dir}/xfont/${OS}/${ARCH}_local/* ${base_dir}/common/${OS}/${ARCH}/pkg/
+        yum -y localinstall ${base_dir}/common/${OS}/${ARCH}/pkg/libXfont*.rpm
+        yum -y localinstall ${base_dir}/common/${OS}/${ARCH}/pkg//xorg*.rpm
+        download_rpm common libXfont
+  else
+    download_rpm common libXfont
+    download_rpm common libXfont2
+    download_rpm common xorg-x11-fonts
+  fi
 }
 
+## 压缩解压功能
 function s_unzip(){
-clear_cache unzip
-download_rpm unzip unzip
-tar_rpm unzip
+  download_rpm common unzip
 }
 
+## 
 function s_misc(){
-clear_cache misc
-download_rpm misc bridge-utils
-download_rpm misc libxslt
-tar_rpm misc
+  # bridge的创建配置命令，如brctl等
+  download_rpm common bridge-utils
+  # xml解析库
+  download_rpm common libxslt
 }
 
+## 时间同步相关库
 function s_ntp(){
-clear_cache ntp
-download_rpm ntp ntp
-download_rpm ntp ntpdate
-tar_rpm ntp
+  download_rpm common ntp
+  download_rpm common ntpdate
 }
 
+## 公共模块使用，用于通过管道显示数据处理进度
 function s_pv(){
-clear_cache pv
-download_rpm pv pv
-tar_rpm pv
+  download_rpm common pv
 }
 
+## 通用组件
 function s_common(){
-clear_cache common
-download_rpm common bind-libs
-download_rpm common expect
-download_rpm common ftp
-download_rpm common GeoIP
-download_rpm common libpcap
-download_rpm common htop
-download_rpm common hdparm
-download_rpm common lrzsz
-download_rpm common pciutils
-download_rpm common psmisc
-download_rpm common tcl
-download_rpm common traceroute
-download_rpm common vsftpd
-tar_rpm common
+  # 解压安装包
+  download_rpm common tar
+  # DNS服务
+  download_rpm common bind-libs
+  # 远程ssh响应式交互
+  download_rpm common expect
+  # ftp备份
+  download_rpm common ftp
+  # IP地址库
+  download_rpm common GeoIP
+  # 抓包的库
+  download_rpm common libpcap
+  # 运维工具htop
+  download_rpm common htop
+  # 查看硬盘相关信息
+  download_rpm common hdparm
+  # 上传下载包
+  download_rpm common lrzsz
+  # lspci，PCI查询命令
+  download_rpm common pciutils
+  # 提供killall、fuser、pstree等运维命令
+  download_rpm common psmisc
+  # tcl，图形用户界面开发及测试脚本语言工具
+  download_rpm common tcl
+  # 网络运费工具
+  download_rpm common traceroute
+  # ftp服务器
+  download_rpm common vsftpd
 }
 
+## python的安装
 function s_python(){
-clear_cache python
-#python3=./python/python_${ARCH}/bin/python3
-python3="python3"
-download_rpm python python3
-#curl http://mirrors.aliyun.com/pypi/get-pip.py -o get-pip.py
-#python3 get-pip.py --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-mkdir -p python/${OS}/${ARCH}/pkg/whl
-${python3} -m pip download pip -d  python/${OS}/${ARCH}/pkg/whl/ --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-${python3} -m pip download setuptools -d  python/${OS}/${ARCH}/pkg/whl/ --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  python3="python3"
+  download_rpm python3 python3
 
-${python3} -m pip install --upgrade pip --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-${python3} -m pip install --upgrade setuptools --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-if [ -f /lib64/libffi.so.7 ]; then
-  ln -f /lib64/libffi.so.7 /lib64/libffi.so.6
-fi
-if [ -f /lib64/libffi.so.8 ]; then
-  ln -f /lib64/libffi.so.8 /lib64/libffi.so.6
-fi
-${python3} -m pip download ipaddress -d  python/${OS}/${ARCH}/pkg/whl/ --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-${python3} -m pip download enum34 -d  python/${OS}/${ARCH}/pkg/whl/ --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-${python3} -m pip download idna -d  python/${OS}/${ARCH}/pkg/whl/ --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-${python3} -m pip download paramiko -d  python/${OS}/${ARCH}/pkg/whl/ --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-${python3} -m pip download ply -d  python/${OS}/${ARCH}/pkg/whl/ --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-${python3} -m pip download six -d  python/${OS}/${ARCH}/pkg/whl/ --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-${python3} -m pip download scapy -d  python/${OS}/${ARCH}/pkg/whl/ --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-${python3} -m pip download watchdog -d  python/${OS}/${ARCH}/pkg/whl/ --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-tar_rpm python
+  python_dir="${base_dir}/python/${OS}/${ARCH}/whl/"
+
+  if [ -d ${python_dir} ]; then
+    rm -rf ${python_dir}
+  fi
+
+  mkdir -p ${python_dir}
+  ${python3} -m pip download pip -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  ${python3} -m pip download setuptools -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+
+  ${python3} -m pip install --upgrade pip --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  ${python3} -m pip install --upgrade setuptools --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  if [ -f /lib64/libffi.so.7 ]; then
+    ln -f /lib64/libffi.so.7 /lib64/libffi.so.6
+  fi
+  if [ -f /lib64/libffi.so.8 ]; then
+    ln -f /lib64/libffi.so.8 /lib64/libffi.so.6
+  fi
+  ${python3} -m pip download ipaddress -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  ${python3} -m pip download enum34 -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  ${python3} -m pip download idna -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  ${python3} -m pip download paramiko -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  ${python3} -m pip download ply -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  ${python3} -m pip download six -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  ${python3} -m pip download scapy -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  ${python3} -m pip download watchdog -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+
+  pushd ${base_dir}
+    tar czf python3_${OS}_${ARCH}.tar.gz python/${OS}/${ARCH}/whl/*
+  popd
 }
 
 function s_mysql(){
-clear_cache mysql
-#rpm -ivh /home/images/mysql57-community-release-el7-7.noarch.rpm
-if [[ "$OS" == "el7" ]]; then
-  rpm -ivh /home/images/mysql80-community-release-el7-7.noarch.rpm
-else
-  rpm -ivh /home/images/mysql80-community-release-el8-9.noarch.rpm
-fi
-download_rpm mysql mysql-community-client
-download_rpm mysql mysql-community-server
-download_rpm mysql mysql-community-common
-download_rpm mysql mysql-community-libs
-tar_rpm mysql
+  clear_cache mysql
+  #rpm -ivh /home/images/mysql57-community-release-el7-7.noarch.rpm
+  if [[ "$OS" == "el7" ]]; then
+    rpm -ivh /home/images/mysql80-community-release-el7-7.noarch.rpm
+  else
+    rpm -ivh /home/images/mysql80-community-release-el8-9.noarch.rpm
+  fi
+  ## 部分系统如bclinux，不支持社区版
+  download_rpm mysql mysql
+  download_rpm mysql mysql-server
+  download_rpm mysql mysql-common
+  download_rpm mysql mysql-libs
+  
+  ## 社区版
+  download_rpm mysql mysql-community-client
+  download_rpm mysql mysql-community-server
+  download_rpm mysql mysql-community-common
+  download_rpm mysql mysql-community-libs
+  tar_rpm mysql
 }
 
 function s_snmp(){
-clear_cache snmp
-download_rpm snmp net-snmp
-tar_rpm snmp
+download_rpm common net-snmp
 }
 
 
 function s_stat(){
-clear_cache stat
-download_rpm stat sysstat
-tar_rpm stat
+download_rpm common sysstat
 }
 
 function s_networkmanager(){
-clear_cache networkmanager
-download_rpm networkmanager NetworkManager
-download_rpm networkmanager lz4
-tar_rpm networkmanager
+download_rpm common NetworkManager
+download_rpm common lz4
 }
 
 function s_network(){
-clear_cache network
-download_rpm network network-scripts
-tar_rpm network
+download_rpm common network-scripts
 }
 
 function s_chrome(){
  clear_cache chrome
  if [[ "$ARCH" == "x86_64" ]]; then 
     if [[ "${OS}" == "el8" ]]; then
-      cp ./chrome/${OS}/${ARCH}_local/* ./chrome/${OS}/${ARCH}/pkg/
-      yum -y localinstall ./chrome/${OS}/${ARCH}/pkg/libvulkan1*.rpm
-      yum -y localinstall ./chrome/${OS}/${ARCH}/pkg/xdg*.rpm
-      yum -y localinstall ./chrome/${OS}/${ARCH}/pkg/liberation*.rpm
-      yum -y localinstall ./chrome/${OS}/${ARCH}/pkg/google-chrome-stable*.rpm
+      cp ${base_dir}/chrome/${OS}/${ARCH}_local/* ./chrome/${OS}/${ARCH}/pkg/
+      yum -y localinstall ${base_dir}/chrome/${OS}/${ARCH}/pkg/libvulkan1*.rpm
+      yum -y localinstall ${base_dir}/chrome/${OS}/${ARCH}/pkg/xdg*.rpm
+      yum -y localinstall ${base_dir}/chrome/${OS}/${ARCH}/pkg/liberation*.rpm
+      yum -y localinstall ${base_dir}/chrome/${OS}/${ARCH}/pkg/google-chrome-stable*.rpm
     else
-      yum -y localinstall ./chrome/google-chrome-stable-*.x86_64.rpm
-      cp ./chrome/google-chrome-stable-*.x86_64.rpm ./chrome/${OS}/${ARCH}/pkg/
+      yum -y localinstall ${base_dir}/chrome/google-chrome-stable-*.x86_64.rpm
+      cp ${base_dir}/chrome/google-chrome-stable-*.x86_64.rpm ${base_dir}/chrome/${OS}/${ARCH}/pkg/
     fi
  else
-    yum -y localinstall ./chrome/browser360-cn-stable-*.aarch64.rpm
-    cp ./chrome/browser360-cn-stable-*.aarch64.rpm ./chrome/${OS}/${ARCH}/pkg/
+    yum -y localinstall ${base_dir}/chrome/browser360-cn-stable-*.aarch64.rpm
+    cp ${base_dir}/chrome/browser360-cn-stable-*.aarch64.rpm ${base_dir}/chrome/${OS}/${ARCH}/pkg/
  fi
- download_rpm chrome xdg-utils
+ download_rpm common xdg-utils
  tar_rpm chrome
 }
 
 function s_dialog(){
-  clear_cache dialog
-  download_rpm dialog dialog
-  tar_rpm dialog
+  download_rpm common dialog
 }
 
 
 function s_mariadb(){
- clear_cache mariadb
- #download_rpm mariadb perl
- download_rpm mariadb mariadb
- download_rpm mariadb mariadb-server
- tar_rpm mariadb
+ download_rpm common mariadb
+ download_rpm common mariadb-server
 }
 
 
-if [[ $# -ge 1 ]]; then
-  for param in $@
-  do
-    s_${param}
-  done
-  exit 0
-fi
+# if [[ $# -ge 1 ]]; then
+#   for param in $@
+#   do
+#     s_${param}
+#   done
+#   exit 0
+# fi
 
-
+clear_cache "common"
 s_net
 s_jdk
 s_xfont
@@ -276,4 +263,6 @@ s_stat
 s_networkmanager
 s_network
 s_chrome
-#s_dialog
+tar_rpm "common"
+
+
