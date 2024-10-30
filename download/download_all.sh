@@ -163,7 +163,7 @@ function s_python(){
   ${python3} -m pip download watchdog -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
 
   pushd ${base_dir}
-    tar czf python3_${OS}_${ARCH}.tar.gz python/${OS}/${ARCH}/whl/*
+    tar czf python_${OS}_${ARCH}.tar.gz python/${OS}/${ARCH}/whl/*
   popd
 }
 
