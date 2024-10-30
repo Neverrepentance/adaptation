@@ -35,10 +35,10 @@ function tar_rpm(){
     return
   fi
   pushd ${base_dir}
-    if [ -f ${1}.${OS}.${ARCH}.tar.gz ]; then
-      rm -f ${1}.${OS}.${ARCH}.tar.gz
+    if [ -f ${1}_${OS}_${ARCH}.tar.gz ]; then
+      rm -f ${1}_${OS}_${ARCH}.tar.gz
     fi
-    tar czf ${1}.${OS}.${ARCH}.tar.gz ${1}/${OS}/${ARCH}/pkg/*
+    tar czf ${1}_${OS}_${ARCH}.tar.gz ${1}/${OS}/${ARCH}/pkg/*
   popd
 }
 
@@ -176,16 +176,19 @@ function s_mysql(){
     rpm -ivh /home/images/mysql80-community-release-el8-9.noarch.rpm
   fi
   ## 部分系统如bclinux，不支持社区版
-  download_rpm mysql mysql
-  download_rpm mysql mysql-server
-  download_rpm mysql mysql-common
-  download_rpm mysql mysql-libs
+  download_rpm common mysql
+  download_rpm common mysql-server
+  download_rpm common mysql-common
+  download_rpm common mysql-libs
   
   ## 社区版
-  download_rpm mysql mysql-community-client
-  download_rpm mysql mysql-community-server
-  download_rpm mysql mysql-community-common
-  download_rpm mysql mysql-community-libs
+  download_rpm common mysql-community-client
+  download_rpm common mysql-community-server
+  download_rpm common mysql-community-common
+  download_rpm common mysql-community-libs
+
+   mv ${base_dir}/common/${OS}/${ARCH}/pkg/mysql*.rpm ${base_dir}/mysql/${OS}/${ARCH}/pkg
+
   tar_rpm mysql
 }
 
@@ -257,12 +260,12 @@ s_ntp
 s_pv
 s_common
 s_python
-s_mysql
 s_snmp
 s_stat
 s_networkmanager
 s_network
 s_chrome
+s_mysql
 tar_rpm "common"
 
 
