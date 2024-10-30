@@ -128,6 +128,9 @@ function s_common(){
   download_rpm common traceroute
   # ftp服务器
   download_rpm common vsftpd
+
+  # 公共模块安全修复红线需要
+  download_rpm common rng-tools
 }
 
 ## python的安装
