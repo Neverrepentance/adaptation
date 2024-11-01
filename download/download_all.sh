@@ -100,6 +100,8 @@ function s_pv(){
 
 ## 通用组件
 function s_common(){
+  # find 命令
+  download_rpm common findutils
   # 解压安装包
   download_rpm common tar
   # DNS服务
@@ -131,12 +133,17 @@ function s_common(){
 
   # 公共模块安全修复红线需要
   download_rpm common rng-tools
+
+  # wget命令
+  download_rpm common wget
+  
+  download_rpm common xdg-utils
 }
 
 ## python的安装
 function s_python(){
   python3="python3"
-  download_rpm python3 python3
+  download_rpm common python3
 
   python_dir="${base_dir}/python/${OS}/${ARCH}/whl/"
 
@@ -145,16 +152,19 @@ function s_python(){
   fi
 
   mkdir -p ${python_dir}
+  curl http://mirrors.aliyun.com/pypi/get-pip.py -o get-pip.py
+  python3 get-pip.py --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
   ${python3} -m pip download pip -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
   ${python3} -m pip download setuptools -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
 
   ${python3} -m pip install --upgrade pip --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
   ${python3} -m pip install --upgrade setuptools --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-  if [ -f /lib64/libffi.so.7 ]; then
-    ln -f /lib64/libffi.so.7 /lib64/libffi.so.6
-  fi
-  if [ -f /lib64/libffi.so.8 ]; then
-    ln -f /lib64/libffi.so.8 /lib64/libffi.so.6
+  if [ ! -f /lib64/libffi.so.6 ]; then
+    if [ -f /lib64/libffi.so.7 ]; then
+      ln -f /lib64/libffi.so.7 /lib64/libffi.so.6
+    elif [ -f /lib64/libffi.so.8 ]; then
+      ln -f /lib64/libffi.so.8 /lib64/libffi.so.6
+    fi
   fi
   ${python3} -m pip download ipaddress -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
   ${python3} -m pip download enum34 -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
@@ -230,7 +240,6 @@ function s_chrome(){
     yum -y localinstall ${base_dir}/chrome/browser360-cn-stable-*.aarch64.rpm
     cp ${base_dir}/chrome/browser360-cn-stable-*.aarch64.rpm ${base_dir}/chrome/${OS}/${ARCH}/pkg/
  fi
- download_rpm common xdg-utils
  tar_rpm chrome
 }
 
@@ -244,16 +253,28 @@ function s_mariadb(){
  download_rpm common mariadb-server
 }
 
-
-# if [[ $# -ge 1 ]]; then
-#   for param in $@
-#   do
-#     s_${param}
-#   done
-#   exit 0
-# fi
+function s_tool(){
+  if [ "${OS}" == "bc82" ]; then
+    target_os="el7"
+  else
+    target_os=${OS}
+  fi
+  links=$(cat ./local_tool.txt |grep ${ARCH}|grep ${target_os} |sort -u)
+  if [ -d ${base_dir}/tools/${OS}/${ARCH}/pkg ]; then
+    rm -rf ${base_dir}/tools/${OS}/${ARCH}/pkg
+  fi
+  mkdir -p ${base_dir}/tools/${OS}/${ARCH}/pkg
+  pushd ${base_dir}/tools/${OS}/${ARCH}/pkg
+    for link in ${links}
+    do 
+      wget ${link}
+    done
+  popd
+  tar_rpm tools
+}
 
 clear_cache "common"
+s_common
 s_net
 s_jdk
 s_xfont
@@ -261,14 +282,14 @@ s_unzip
 s_misc
 s_ntp
 s_pv
-s_common
-s_python
 s_snmp
 s_stat
 s_networkmanager
 s_network
 s_chrome
 s_mysql
+s_python
+s_tool
 tar_rpm "common"
 
 
