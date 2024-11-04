@@ -1,2 +1,5 @@
 redis
 *.tar.gz
+openssh-*
+openssl-*
+upgrade_openssh*
