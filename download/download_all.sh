@@ -188,17 +188,21 @@ function s_mysql(){
   else
     rpm -ivh /home/images/mysql80-community-release-el8-9.noarch.rpm
   fi
-  ## 部分系统如bclinux，不支持社区版
-  download_rpm common mysql
-  download_rpm common mysql-server
-  download_rpm common mysql-common
-  download_rpm common mysql-libs
-  
+
   ## 社区版
   download_rpm common mysql-community-client
   download_rpm common mysql-community-server
   download_rpm common mysql-community-common
   download_rpm common mysql-community-libs
+  
+  if ! rpm -q mysql-server > /dev/null
+  then
+    ## 部分系统如bclinux，不支持社区版。
+    download_rpm common mysql
+    download_rpm common mysql-community-server
+    download_rpm common mysql-common
+    download_rpm common mysql-libs
+  fi
 
    mv ${base_dir}/common/${OS}/${ARCH}/pkg/mysql*.rpm ${base_dir}/mysql/${OS}/${ARCH}/pkg
 
