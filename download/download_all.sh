@@ -171,7 +171,8 @@ function s_python(){
   ${python3} -m pip download idna -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
   ${python3} -m pip download paramiko -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
   ${python3} -m pip download ply -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
-  ${python3} -m pip download six -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
+  ## six安装会在原生python3不同的lib目录下安装，导致系统原生python3的six组件丢失，产生异常
+  # ${python3} -m pip download six -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
   ${python3} -m pip download scapy -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
   ${python3} -m pip download watchdog -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
 
