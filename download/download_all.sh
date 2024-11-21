@@ -91,6 +91,11 @@ function s_misc(){
 function s_ntp(){
   download_rpm common ntp
   download_rpm common ntpdate
+  if ! rpm -q ntp > /dev/null
+  then
+    ## centos8,以及基于centos8的系统，chrony取代了ntp。
+    download_rpm common chrony
+  fi
 }
 
 ## 公共模块使用，用于通过管道显示数据处理进度
