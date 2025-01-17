@@ -103,6 +103,12 @@ function s_pv(){
   download_rpm common pv
 }
 
+
+  # find 命令
+  download_rpm common findutils
+  # 解压安装包
+  download_rpm common tar
+
 ## 通用组件
 function s_common(){
   # find 命令
@@ -143,6 +149,10 @@ function s_common(){
   download_rpm common wget
   
   download_rpm common xdg-utils
+
+  # 增加运维工具
+  download_rpm common gdb
+  download_rpm common iotop
 }
 
 ## python的安装
@@ -171,6 +181,8 @@ function s_python(){
       ln -f /lib64/libffi.so.8 /lib64/libffi.so.6
     fi
   fi
+  
+  ${python3} -m pip download supervisor -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
   ${python3} -m pip download ipaddress -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
   ${python3} -m pip download enum34 -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
   ${python3} -m pip download idna -d  ${python_dir} --index-url=https://pypi.tuna.tsinghua.edu.cn/simple
@@ -284,22 +296,22 @@ function s_tool(){
 }
 
 clear_cache "common"
-s_common
-s_net
-s_jdk
-s_xfont
-s_unzip
-s_misc
-s_ntp
-s_pv
-s_snmp
-s_stat
-s_networkmanager
-s_network
-s_chrome
-s_mysql
+# s_common
+# s_net
+# s_jdk
+# s_xfont
+# s_unzip
+# s_misc
+# s_ntp
+# s_pv
+# s_snmp
+# s_stat
+# s_networkmanager
+# s_network
+# s_chrome
+# s_mysql
 s_python
-s_tool
-tar_rpm "common"
+# s_tool
+# tar_rpm "common"
 
 
