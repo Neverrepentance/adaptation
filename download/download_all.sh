@@ -296,22 +296,23 @@ function s_tool(){
 }
 
 clear_cache "common"
-# s_common
-# s_net
-# s_jdk
-# s_xfont
-# s_unzip
-# s_misc
-# s_ntp
-# s_pv
-# s_snmp
-# s_stat
-# s_networkmanager
-# s_network
-# s_chrome
-# s_mysql
+yum update -y
+s_common
+s_net
+s_jdk
+s_xfont
+s_unzip
+s_misc
+s_ntp
+s_pv
+s_snmp
+s_stat
+s_networkmanager
+s_network
+s_chrome
+s_mysql
 s_python
-# s_tool
-# tar_rpm "common"
+s_tool
+tar_rpm "common"
 
 
