@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# exec > >(tee -a /home/image/dev/download/logs/$0.log) 2>&1
+
 set -x
 
 rm -f *.core
@@ -213,11 +215,11 @@ function s_mysql(){
   download_rpm common mysql-community-common
   download_rpm common mysql-community-libs
   
-  if ! rpm -q mysql-server > /dev/null
+  if ! rpm -q mysql-community-server > /dev/null
   then
     ## 部分系统如bclinux，不支持社区版。
     download_rpm common mysql
-    download_rpm common mysql-community-server
+    download_rpm common mysql-server
     download_rpm common mysql-common
     download_rpm common mysql-libs
   fi
