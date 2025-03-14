@@ -28,7 +28,6 @@ function clear_cache(){
 
 function download_rpm(){
   yum -y install ${2}
-
   find $cache_path -name "*.rpm" -exec mv {} ${base_dir}/${1}/${OS}/${ARCH}/pkg \;
 }
 
@@ -105,20 +104,10 @@ function s_pv(){
   download_rpm common pv
 }
 
-
-  # find 命令
-  download_rpm common findutils
-  # 解压安装包
-  download_rpm common tar
-
 ## 通用组件
 function s_common(){
-  # find 命令
-  download_rpm common findutils
-  # 解压安装包
-  download_rpm common tar
   # DNS服务
-  download_rpm common bind-libs
+  download_rpm common bind
   # 远程ssh响应式交互
   download_rpm common expect
   # ftp备份
@@ -155,6 +144,11 @@ function s_common(){
   # 增加运维工具
   download_rpm common gdb
   download_rpm common iotop
+  download_rpm common lsof  
+  download_rpm common strace
+
+  # 增加jemalloc 工具
+  download_rpm common graphviz
 }
 
 ## python的安装
@@ -298,7 +292,12 @@ function s_tool(){
 }
 
 clear_cache "common"
-yum update -y
+
+# find 命令
+download_rpm common findutils
+# 解压安装包
+download_rpm common tar
+
 s_common
 s_net
 s_jdk
@@ -310,7 +309,7 @@ s_pv
 s_snmp
 s_stat
 s_networkmanager
-s_network
+# s_network
 s_chrome
 s_mysql
 s_python
