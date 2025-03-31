@@ -1,0 +1,23 @@
+# HA服务
+http://172.16.44.106:9000/self-packet/ha_mgr/oe2203sp1/x86_64/ha_mgr-latest.oe2203sp1.x86_64.rpm
+http://172.16.44.106:9000/self-packet/ha_mgr/oe2203sp1/aarch64/ha_mgr-latest.oe2203sp1.aarch64.rpm
+http://172.16.44.106:9000/self-packet/ha_mgr/ky10/x86_64/ha_mgr-latest.ky10.x86_64.rpm
+http://172.16.44.106:9000/self-packet/ha_mgr/ky10/aarch64/ha_mgr-latest.ky10.aarch64.rpm
+http://172.16.44.106:9000/self-packet/ha_mgr/hce2/x86_64/ha_mgr-latest.hce2.x86_64.rpm
+http://172.16.44.106:9000/self-packet/ha_mgr/el7/x86_64/ha_mgr-latest.el7.x86_64.rpm
+
+# 网络服务
+http://172.16.44.106:9000/self-packet/network_mgr/el7/x86_64/network_mgr-latest.el7.x86_64.rpm
+http://172.16.44.106:9000/self-packet/network_mgr/oe2203sp1/x86_64/network_mgr-latest.oe2203sp1.x86_64.rpm
+http://172.16.44.106:9000/self-packet/network_mgr/oe2203sp1/aarch64/network_mgr-latest.oe2203sp1.aarch64.rpm
+http://172.16.44.106:9000/self-packet/network_mgr/ky10/x86_64/network_mgr-latest.ky10.x86_64.rpm
+http://172.16.44.106:9000/self-packet/network_mgr/ky10/aarch64/network_mgr-latest.ky10.aarch64.rpm
+http://172.16.44.106:9000/self-packet/network_mgr/hce2/x86_64/network_mgr-latest.hce2.x86_64.rpm
+http://172.16.44.106:9000/self-packet/network_mgr/hce2/aarch64/network_mgr-latest.hce2.aarch64.rpm
+
+# 网卡配置依赖
+http://172.16.44.106:9000/self-packet/secsmart/oe2203sp1/x86_64/sec-tool-latest.oe2203sp1.x86_64.rpm
+http://172.16.44.106:9000/self-packet/secsmart/oe2203sp1/aarch64/sec-tool-latest.aarch64.rpm
+http://172.16.44.106:9000/self-packet/secsmart/ky10/x86_64/sec-tool-latest.ky10.x86_64.rpm
+http://172.16.44.106:9000/self-packet/secsmart/ky10/aarch64/sec-tool-latest.ky10.aarch64.rpm
+http://172.16.44.106:9000/self-packet/secsmart/el7/x86_64/sec-tool-latest.el7.x86_64.rpm

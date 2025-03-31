@@ -27,7 +27,7 @@ function clear_cache(){
 
 
 function download_rpm(){
-  yum -y install ${2}
+  yum -y reinstall ${2} || yum -y install ${2}
   find $cache_path -name "*.rpm" -exec mv {} ${base_dir}/${1}/${OS}/${ARCH}/pkg \;
 }
 
@@ -224,21 +224,24 @@ function s_mysql(){
 }
 
 function s_snmp(){
-download_rpm common net-snmp
+  download_rpm common net-snmp
 }
 
 
 function s_stat(){
-download_rpm common sysstat
+  download_rpm common sysstat 
 }
 
 function s_networkmanager(){
-download_rpm common NetworkManager
-download_rpm common lz4
+  download_rpm common libsepol-devel
+  download_rpm common libsepol
+  download_rpm common readline
+  download_rpm common NetworkManager
+  download_rpm common lz4
 }
 
 function s_network(){
-download_rpm common network-scripts
+  download_rpm common network-scripts
 }
 
 function s_chrome(){
