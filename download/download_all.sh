@@ -106,8 +106,8 @@ function s_pv(){
 
 ## 通用组件
 function s_common(){
-  # DNS服务
-  download_rpm common bind
+  # DNS服务， 自带的命令，不需要安装， 麒麟sp3版本不兼容sp1
+  # download_rpm common bind
   # 远程ssh响应式交互
   download_rpm common expect
   # ftp备份
@@ -233,11 +233,13 @@ function s_stat(){
 }
 
 function s_networkmanager(){
-  download_rpm common libsepol-devel
-  download_rpm common libsepol
-  download_rpm common readline
-  download_rpm common NetworkManager
-  download_rpm common lz4
+  if [[ "${OS}" == "el7" ]]; then
+    download_rpm common libsepol-devel
+    download_rpm common libsepol
+    download_rpm common readline
+    download_rpm common NetworkManager
+    download_rpm common lz4
+  fi
 }
 
 function s_network(){
@@ -311,7 +313,7 @@ s_ntp
 s_pv
 s_snmp
 s_stat
-s_networkmanager
+# s_networkmanager
 # s_network
 s_chrome
 s_mysql
