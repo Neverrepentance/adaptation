@@ -21,7 +21,7 @@ function download_tools(){
     if [ -f tools_${1}_${2}.tar.gz ]; then
       rm -f tools_${1}_${2}.tar.gz
     fi
-    tar czf tools_${1}_${2}.tar.gz tools/${1}/${2}/pkg/*
+    tar czf tools_${1}_${2}.tar.gz -C tools/${1}/${2}/pkg/ .
   popd
 }
 

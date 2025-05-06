@@ -39,7 +39,7 @@ function tar_rpm(){
     if [ -f ${1}_${OS}_${ARCH}.tar.gz ]; then
       rm -f ${1}_${OS}_${ARCH}.tar.gz
     fi
-    tar czf ${1}_${OS}_${ARCH}.tar.gz ${1}/${OS}/${ARCH}/pkg/*
+    tar czf ${1}_${OS}_${ARCH}.tar.gz -C ${1}/${OS}/${ARCH}/pkg/ .
   popd
 }
 
@@ -106,8 +106,10 @@ function s_pv(){
 
 ## 通用组件
 function s_common(){
-  # DNS服务， 自带的命令，不需要安装， 麒麟sp3版本不兼容sp1
-  # download_rpm common bind
+  download_rpm common createrepo
+
+  # nslookup 诊断命令
+  download_rpm common bind-utils
   # 远程ssh响应式交互
   download_rpm common expect
   # ftp备份
@@ -137,11 +139,13 @@ function s_common(){
   download_rpm common rng-tools
 
   # wget命令
+  download_rpm common nettle
   download_rpm common wget
   
   download_rpm common xdg-utils
 
   # 增加运维工具
+  download_rpm common gdb-headless
   download_rpm common gdb
   download_rpm common iotop
   download_rpm common lsof  
@@ -149,6 +153,10 @@ function s_common(){
 
   # 增加jemalloc 工具
   download_rpm common graphviz
+
+ 
+  # 增加浮点运算命令
+  download_rpm common bc
 }
 
 ## python的安装
@@ -224,6 +232,12 @@ function s_mysql(){
 }
 
 function s_snmp(){
+  # ky10 sp1, 需要这三四个依赖
+  download_rpm common perl
+  download_rpm common perl-devel
+  download_rpm common perl-libs
+  download_rpm common net-snmp-libs
+
   download_rpm common net-snmp
 }
 
@@ -263,6 +277,7 @@ function s_chrome(){
     yum -y localinstall ${base_dir}/chrome/browser360-cn-stable-*.aarch64.rpm
     cp ${base_dir}/chrome/browser360-cn-stable-*.aarch64.rpm ${base_dir}/chrome/${OS}/${ARCH}/pkg/
  fi
+ find $cache_path -name "*.rpm" -exec mv {} ${base_dir}/common/${OS}/${ARCH}/pkg \;
  tar_rpm chrome
 }
 
@@ -282,7 +297,7 @@ function s_tool(){
   else
     target_os=${OS}
   fi
-  links=$(cat ./local_tool.txt |grep ${ARCH}|grep ${target_os} |sort -u)
+  links=$(cat ./local_tool_3.2.5.txt |grep ${ARCH}|grep ${target_os} |sort -u)
   if [ -d ${base_dir}/tools/${OS}/${ARCH}/pkg ]; then
     rm -rf ${base_dir}/tools/${OS}/${ARCH}/pkg
   fi
