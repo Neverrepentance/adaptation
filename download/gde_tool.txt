@@ -5,7 +5,6 @@ http://172.16.44.106:9000/self-packet/ha_mgr/ky10/x86_64/ha_mgr-latest.ky10.x86_
 http://172.16.44.106:9000/self-packet/ha_mgr/ky10/aarch64/ha_mgr-latest.ky10.aarch64.rpm
 http://172.16.44.106:9000/self-packet/ha_mgr/hce2/x86_64/ha_mgr-latest.hce2.x86_64.rpm
 http://172.16.44.106:9000/self-packet/ha_mgr/el7/x86_64/ha_mgr-latest.el7.x86_64.rpm
-http://172.16.44.106:9000/self-packet/ha_mgr/el7/aarch64/ha_mgr-latest.el7.aarch64.rpm
 
 # 网络服务
 http://172.16.44.106:9000/self-packet/network_mgr/el7/x86_64/network_mgr-latest.el7.x86_64.rpm
@@ -14,5 +13,3 @@ http://172.16.44.106:9000/self-packet/network_mgr/oe2203sp1/aarch64/network_mgr-
 http://172.16.44.106:9000/self-packet/network_mgr/ky10/x86_64/network_mgr-latest.ky10.x86_64.rpm
 http://172.16.44.106:9000/self-packet/network_mgr/ky10/aarch64/network_mgr-latest.ky10.aarch64.rpm
 http://172.16.44.106:9000/self-packet/network_mgr/hce2/x86_64/network_mgr-latest.hce2.x86_64.rpm
-http://172.16.44.106:9000/self-packet/network_mgr/hce2/aarch64/network_mgr-latest.hce2.aarch64.rpm
-http://172.16.44.106:9000/self-packet/network_mgr/el7/aarch64/network_mgr-latest.el7.aarch64.rpm

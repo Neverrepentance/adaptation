@@ -157,6 +157,9 @@ function s_common(){
  
   # 增加浮点运算命令
   download_rpm common bc
+
+  
+  download_rpm common ipset
 }
 
 ## python的安装

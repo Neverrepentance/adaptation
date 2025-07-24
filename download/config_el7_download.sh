@@ -22,4 +22,8 @@ cache_path=/var/cache/yum
 yum clean all
 yum makecache
 
-sh ./download_all.sh "${OS}" "${cache_path}"
+if [ $# -eq 0 ]; then
+    sh ./download_all.sh "${OS}" "${cache_path}"
+else
+    sh ./download_all_sp.sh "${OS}" "${cache_path}" "$@"
+fi

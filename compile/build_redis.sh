@@ -52,7 +52,7 @@ fi
 #     popd
 # fi
 
-redis_version="6.2.16"
+redis_version="6.2.19"
 redis_source_url="https://github.com/redis/redis/archive/refs/tags/${redis_version}.tar.gz"
 
 mkdir -p  ${base_path}/redis/
